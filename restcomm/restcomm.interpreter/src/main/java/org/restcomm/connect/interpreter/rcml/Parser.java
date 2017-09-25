@@ -35,9 +35,14 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Matcher; //added
+import java.util.regex.Pattern; //added
+ 
 
 import static javax.xml.stream.XMLStreamConstants.*;
 
@@ -118,11 +123,16 @@ public final class Parser extends RestcommUntypedActor {
     }
 
     private Tag next() throws LimitExceededException{
+		boolean shouldContinue; // new variable
+		
         if (iterator != null) {
             while (iterator.hasNext()) {
                 final Tag tag = iterator.next();
                 if (Verbs.isVerb(tag)) {
-                    if (current != null && current.hasChildren()) {
+					
+					shouldContinue=validation(tag); // add new validation, invoke to class
+					
+                     if (current != null && current.hasChildren() && shouldContinue) {
                         final List<Tag> children = current.children();
                         if (children.contains(tag)) {
                             continue;
@@ -152,6 +162,235 @@ public final class Parser extends RestcommUntypedActor {
         return null;
     }
 
+	///////////////////////////////////////////// new class -- validate
+    private boolean validation(Tag tag) {
+    	boolean shouldContinue=true;
+    	List<Attribute> mapKeys;
+
+    	
+       	if (tag.hasAttributes()) {
+    		
+    		mapKeys=tag.attributes();
+    		
+    		if (tag.name().equals("Record")) {
+    			for (Attribute e : mapKeys) {
+    				 String eName=e.name();
+    				 double eValue=Double.parseDouble(e.value());
+    				
+    				 Pattern pattern = Pattern.compile("^([0-9]{1,3})$");
+    				 Matcher mather = pattern.matcher(e.value());
+    				 
+    				 if(eName.equals("maxLength") && (mather.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>100) ) {
+    						 // this set maxLength between 0 and 100 sec
+    						 //if is set one of those values the process will not go
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 if(eName.equals("timeout") && (mather.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>5) ) {
+    						 // this set timeout in f
+    						
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 Pattern pattern_url = Pattern.compile("^((http://|https://|/))?(([\\\\w!~*'().&=+$%-]+: )?[\\\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\\\.){3}[0-9]{1,3}|([\\\\w!~*'()-]+\\\\.)*([\\\\w^-][\\\\w-]{0,61})?[\\\\w]\\\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\\\w!~*'().;?:@&=+$,%#-]+)+/*)$");
+      				//this admit: http https and / (local directory)	
+      				 Matcher mather_url = pattern_url.matcher(e.value());
+      				if(eName.equals("action") || eName.equals("transcribeCallback") ) {
+   					 if (mather_url.find() == false) {
+   						shouldContinue=false;
+   					 }
+   				  }
+    				
+      			 Pattern patternFinishOnKey = Pattern.compile("^\\+|([0-9]{1})|\\#|-1$");
+   				 Matcher matherFinishOnKey = patternFinishOnKey.matcher(e.value());
+   				 
+   				 if(eName.equals("finishOnKey") && (matherFinishOnKey.find() == true) ) {
+					
+						shouldContinue=false;
+					
+				  }
+    				 
+    			}	
+    		}
+    		
+    		
+    		if (tag.name().equals("Dial")) {
+    			for (Attribute e : mapKeys) {
+    				 String eName=e.name();
+    				 double eValue=Double.parseDouble(e.value());
+    				
+    				 Pattern patterntimeLimit = Pattern.compile("^([0-9]{1,5})$");
+    				 Matcher mathertimeLimit = patterntimeLimit.matcher(e.value());
+    				 
+    				 if(eName.equals("timeLimit") && (mathertimeLimit.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>14400) ) {
+    						 // this set maxLength between 0 and 14400  sec
+    						 //if is set one of those values the process will not go
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 Pattern patterntimeout = Pattern.compile("^([0-9]{1,2})$");
+    				 Matcher mathertimeout = patterntimeout.matcher(e.value());
+    				 
+    				 if(eName.equals("timeout") && (mathertimeout.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>30) ) {
+    						 // this set timeout in f
+    						
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 Pattern pattern_url = Pattern.compile("^((http://|https://|/))?(([\\\\w!~*'().&=+$%-]+: )?[\\\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\\\.){3}[0-9]{1,3}|([\\\\w!~*'()-]+\\\\.)*([\\\\w^-][\\\\w-]{0,61})?[\\\\w]\\\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\\\w!~*'().;?:@&=+$,%#-]+)+/*)$");
+      				//this admit: http https and / (local directory)	
+      				 Matcher mather_url = pattern_url.matcher(e.value());
+      				if(eName.equals("action")) {
+   					 if (mather_url.find() == false) {
+   						shouldContinue=false;
+   					 }
+   				  }
+    				
+      		
+    				 
+    			}	
+    		}
+    		
+    		
+    		if (tag.name().equals("Email")) {
+    			//pattern to validate
+    			Pattern pattern = Pattern.compile("^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"+"[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
+    			for (Attribute e : mapKeys) {
+    				 String eName=e.name();
+    				 String eValue=e.value();
+    				 
+    				
+    				 
+    				 if (eName.equals("from") || eName.equals("to") || eName.equals("cc") || eName.equals("bcc")) {
+    				  
+    			        Matcher mather = pattern.matcher(eValue);
+    			 
+    			        if (mather.find() == false) {
+    			        		shouldContinue=false;
+    			        } 
+    				 
+    				 }
+    			}	
+    		}
+    		
+    		if (tag.name().equals("Pause")) {
+    			for (Attribute e : mapKeys) {
+    				 String eName=e.name();
+    				 double eValue=Double.parseDouble(e.value());
+    				
+    				 Pattern pattern = Pattern.compile("^([0-9]{1,3})$");
+    				 Matcher mather = pattern.matcher(e.value());
+    				 
+    				 if(eName.equals("length") && (mather.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>3600) ) {
+    						 // this set maxLength between 0 and 3600 sec
+    						 //if is set tour of those values the process will not go
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    			}	
+    		}
+    		
+    		if (tag.name().equals("Sms") || tag.name().equals("Fax") ) {
+    			//as far I can see the sms and fax has the same variables
+    			for (Attribute e : mapKeys) {
+    				 String eName=e.name();
+    				 String eValue=e.value();
+    				 Pattern pattern = Pattern.compile("^((http://|https://|/))?(([\\\\w!~*'().&=+$%-]+: )?[\\\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\\\.){3}[0-9]{1,3}|([\\\\w!~*'()-]+\\\\.)*([\\\\w^-][\\\\w-]{0,61})?[\\\\w]\\\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\\\w!~*'().;?:@&=+$,%#-]+)+/*)$");
+    		    	//this admit: http https and / (local directory)	
+    				 Matcher mather = pattern.matcher(eValue);
+    				 /// note the attributes to and from was not validated because can admit numbers or characters
+    				
+    				 Pattern patternPhone = Pattern.compile("^\\+?([0-9]{1,14})$");
+    				 Matcher matherPhone = patternPhone.matcher(eValue);
+    				 
+    				 if(eName.equals("statusCallback") ||eName.equals("action") ) {
+    					 if (mather.find() == false) {
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 if(eName.equals("to") ||eName.equals("from") ) {
+    					 if (matherPhone.find() == false) {
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    			}	
+    		}
+    		
+    		
+    		if (tag.name().equals("Gather")) {
+    			for (Attribute e : mapKeys) {
+    				 String eName=e.name();
+    				 double eValue=Double.parseDouble(e.value());
+    				
+    				 Pattern pattern = Pattern.compile("^([0-9]{1,3})$");
+    				 Matcher mather = pattern.matcher(e.value());
+    				 
+    				 Pattern pattern_url = Pattern.compile("^((http://|https://|/))?(([\\\\w!~*'().&=+$%-]+: )?[\\\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\\\.){3}[0-9]{1,3}|([\\\\w!~*'()-]+\\\\.)*([\\\\w^-][\\\\w-]{0,61})?[\\\\w]\\\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\\\w!~*'().;?:@&=+$,%#-]+)+/*)$");
+     				//this admit: http https and / (local directory)	
+     				 Matcher mather_url = pattern_url.matcher(e.value());
+     				 
+    				 if( eName.equals("numDigits") && (mather.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>3) ) {
+    						 // this allows only 3 digits
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 if( eName.equals("timeout") && (mather.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>20) ) {
+    						 // this set a timeout of 20 sec
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 if(eName.equals("action") || eName.equals("partialResultCallback") ) {
+    					 if (mather_url.find() == false) {
+    						shouldContinue=false;
+    					 }
+    				  }
+    				 
+    				 
+    			}	
+    		}
+    		
+    		if ((tag.name().equals("Play"))||(tag.name().equals("Say"))) {
+    			for (Attribute e : mapKeys) {
+    				 String eName=e.name();
+    				 double eValue=Double.parseDouble(e.value());
+ 
+    				 Pattern pattern_repeat = Pattern.compile("^([0-9]{1,3})$");
+    				 Matcher mather_repeat = pattern_repeat.matcher(e.value());
+    				 
+    				 if( eName.equals("loop") && (mather_repeat.find() == true) ) {
+    					 if ( (eValue<0) ||(eValue>3) ) {
+    						 // this set a repeat 3 times
+    						shouldContinue=false;
+    					 }
+    				  }
+    			}	
+    		}
+    		
+    		
+    		
+    } //if tag has no attributtes then continue		
+    
+       	return shouldContinue;
+    	
+    }
+///////////////// end new class 
+	
     private Tag parse(final XMLStreamReader stream) throws IOException, XMLStreamException {
         final Stack<Tag.Builder> builders = new Stack<Tag.Builder>();
         while (stream.hasNext()) {

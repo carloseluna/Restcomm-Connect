@@ -20,9 +20,12 @@
 package org.restcomm.connect.interpreter.rcml;
 
 import akka.actor.ActorRef;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 
+import javax.naming.LimitExceededException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -31,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +42,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Matcher; //added
 import java.util.regex.Pattern; //added
- 
+
 
 import static javax.xml.stream.XMLStreamConstants.*;
 
@@ -118,20 +122,31 @@ public final class Parser extends RestcommUntypedActor {
         builders.push(builder);
     }
 
-    private Tag next() {
-    	boolean AttributteValidator; // new variable
-
+    private Tag next() throws LimitExceededException{
+	boolean AttributteValidator; // new variable
         if (iterator != null) {
             while (iterator.hasNext()) {
                 final Tag tag = iterator.next();
                 if (Verbs.isVerb(tag)) {
-                          
-                	AttributteValidator=validation(tag); // add new validation, invoke to class
-               		
+				
+					AttributteValidator=validation(tag); // add new validation, invoke to class
+					
                     if (current != null && current.hasChildren()) {
                         final List<Tag> children = current.children();
                         if (children.contains(tag)) {
                             continue;
+                        }
+                    }
+                    if (tag.name().equals(Verbs.gather) && tag.hasAttribute(GatherAttributes.ATTRIBUTE_HINTS) && !StringUtils.isEmpty(tag.attribute(GatherAttributes.ATTRIBUTE_HINTS).value())) {
+                        String hotWords = tag.attribute(GatherAttributes.ATTRIBUTE_HINTS).value();
+                        List<String> hintList = Arrays.asList(hotWords.split(","));
+                        if (hintList.size() > 50) {
+                            throw new LimitExceededException("HotWords limit exceeded. There are more than 50 phrases");
+                        }
+                        for (String hint : hintList) {
+                            if (hint.length() > 100) {
+                                throw new LimitExceededException("HotWords limit exceeded. Hint with more than 100 characters found");
+                            }
                         }
                     }
                     current = tag;
@@ -145,7 +160,8 @@ public final class Parser extends RestcommUntypedActor {
         }
         return null;
     }
-///////////////////////////////////////////// new class -- validate
+
+	///////////////////////////////////////////// new class -- validate
     private boolean validation(Tag tag) {
     	boolean ValidationPass=true;
     	
@@ -192,7 +208,8 @@ public final class Parser extends RestcommUntypedActor {
     	return ValidationPass;
     	
     }
-///////////////// end new class    
+///////////////// end new class
+	
     private Tag parse(final XMLStreamReader stream) throws IOException, XMLStreamException {
         final Stack<Tag.Builder> builders = new Stack<Tag.Builder>();
         while (stream.hasNext()) {
@@ -219,26 +236,29 @@ public final class Parser extends RestcommUntypedActor {
         return null;
     }
 
-   
-    
     @Override
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
         if (GetNextVerb.class.equals(klass)) {
-            final Tag verb = next();
-            if (verb != null) {
-                sender.tell(verb, self);
-                if(logger.isDebugEnabled()){
-                    logger.debug("Parser, next verb: "+verb.toString());
+            try {
+                final Tag verb = next();
+                if (verb != null) {
+                    sender.tell(verb, self);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Parser, next verb: " + verb.toString());
+                    }
+                } else {
+                    final End end = new End();
+                    sender.tell(end, sender);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Parser, next verb: " + end.toString());
+                    }
                 }
-            } else {
-                final End end = new End();
-                sender.tell(end, sender);
-                if(logger.isDebugEnabled()) {
-                    logger.debug("Parser, next verb: "+end.toString());
-                }
+            } catch (LimitExceededException e) {
+                logger.warn(e.getMessage());
+                sender.tell(new ParserFailed(e, xml), null);
             }
         }
     }

@@ -26,6 +26,8 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
+import gov.nist.javax.sdp.fields.Email;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,6 +42,8 @@ import static org.restcomm.connect.interpreter.rcml.Verbs.pause;
 import static org.restcomm.connect.interpreter.rcml.Verbs.play;
 import static org.restcomm.connect.interpreter.rcml.Verbs.record;
 import static org.restcomm.connect.interpreter.rcml.Verbs.say;
+import static org.restcomm.connect.interpreter.rcml.Verbs.email;
+import static org.restcomm.connect.interpreter.rcml.Verbs.sms;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -96,7 +100,7 @@ public final class ParserTest {
                 parser.tell(next, observer);
                 Tag verb = expectMsgClass(Tag.class);
                
-                /////////create depending teg type
+                /////////create depending tag type
                 
                 assertTrue(record.equals(verb.name()));
                 assertTrue(verb.attribute("action").value().equals("https://127.0.0.1:8080/restcomm/demos/hello-world.jsp"));
@@ -132,7 +136,27 @@ public final class ParserTest {
                 assertTrue(pause.equals(child.name()));
                 assertTrue(child.attribute("length").value().equals("1"));
                 parser.tell(next, observer);
+                verb = expectMsgClass(Tag.class);
+                
+                assertTrue(email.equals(verb.name()));
+                assertTrue(verb.attribute("from").value().equals("carlos@gmail.com"));
+                assertTrue(verb.attribute("to").value().equals("carlos@hotmail.com"));
+                assertTrue(verb.attribute("cc").value().equals("someone2@localhost.com, test@localhost.com, test3@localhost.com"));
+                assertTrue(verb.attribute("subject").value().equals("This is the subject"));
+                assertTrue(verb.text().equals("This is the body!!"));      
+                parser.tell(next, observer);
+                verb = expectMsgClass(Tag.class);
+                
+                assertTrue(sms.equals(verb.name()));
+                assertTrue(verb.attribute("from").value().equals("+555789211"));
+                assertTrue(verb.attribute("to").value().equals("+555789211"));
+                assertTrue(verb.attribute("statusCallback").value().equals("transcribe.jsp"));
+                parser.tell(next, observer);
                 expectMsgClass(End.class);
+                
+                
+                
+                
             }
         };
     }

@@ -23,7 +23,7 @@ import akka.actor.ActorRef;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
+//import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
 
 import javax.naming.LimitExceededException;
 import javax.xml.stream.XMLInputFactory;
@@ -137,6 +137,7 @@ public final class Parser extends RestcommUntypedActor {
                             continue;
                         }
                     }
+                    /*
                     if (tag.name().equals(Verbs.gather) && tag.hasAttribute(GatherAttributes.ATTRIBUTE_HINTS) && !StringUtils.isEmpty(tag.attribute(GatherAttributes.ATTRIBUTE_HINTS).value())) {
                         String hotWords = tag.attribute(GatherAttributes.ATTRIBUTE_HINTS).value();
                         List<String> hintList = Arrays.asList(hotWords.split(","));
@@ -148,7 +149,7 @@ public final class Parser extends RestcommUntypedActor {
                                 throw new LimitExceededException("HotWords limit exceeded. Hint with more than 100 characters found");
                             }
                         }
-                    }
+                    }*/
                     current = tag;
                     return current;
                 }

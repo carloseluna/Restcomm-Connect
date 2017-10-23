@@ -278,18 +278,38 @@ class EmailValidator implements AttributeValidator {
 		for (Attribute e : mapKeys) {
 			 String eName=e.name();
 			 
-			 if (eName.equals("from") || eName.equals("to") || eName.equals("cc") || eName.equals("bcc")) {
+			 if (eName.equals("from") || eName.equals("to")) {
 				 String eValue=e.value();
 				 Matcher mather = pattern.matcher(eValue);
 				 
 		        if (mather.matches() == false) {
 		        	FinalValidationState=false;
 		        	if(logger.isInfoEnabled()){
+		        	
 		                logger.info("The field "+eName+" on Email is incorrect");
 		            }
 		        } 
 			 
 			 }
+			
+			 if (eName.equals("cc") || eName.equals("Bcc")) {
+				 String eValue=e.value();
+				 String[] ListOfEmails = eValue.split(","); //in case we have more than 1 email
+				
+				 for (String email : ListOfEmails) {
+					email=email.trim();	 
+					Matcher mather = pattern.matcher(email);				
+			        if (mather.matches() == false) {
+			        	FinalValidationState=false;
+			        	if(logger.isInfoEnabled()){
+			                logger.info("The field "+eName+" on Email, one o more emaila are incorrect");
+			            }
+			        }
+		        
+				 } 
+			 
+			 }
+			 
 		}	
 		
 		return FinalValidationState;	
@@ -378,8 +398,8 @@ class SmsAndFaxValidator implements AttributeValidator {
 					 if(logger.isInfoEnabled()){
 			                logger.info("The url value on "+eName+" from "+tag.name()+" is not valid");
 			            }
-				 }	
-
+				 }
+				
 				 break;
 			 case "action":
 				 Pattern patternUrlAction = Pattern.compile(MyValidators.get("urlparse"));

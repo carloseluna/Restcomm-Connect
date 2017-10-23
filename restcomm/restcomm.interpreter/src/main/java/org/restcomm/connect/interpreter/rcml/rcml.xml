@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Record
+        action="https://127.0.0.1:8080/restcomm/demos/hello-world.jsp"
+        method="GET"
+        maxLength="60"
+        timeout="5"
+        finishOnKey="#"
+        transcribe="true"
+        transcribeCallback="transcribe.jsp"
+        playBeep="false"
+    />
+    <Gather timeout="30" finishOnKey="#">
+        <Say voice="man" language="en" loop="1">Hello World!</Say>
+		<Play loop="1">https://127.0.0.1:8080/restcomm/audio/hello-world.wav</Play>
+		<Pause length="1"/>
+		
+    </Gather>
+    <Email 
+    	from="carlos@gmail.com" 
+	    to="carlos@hotmail.com" 
+	    cc="someone2@localhost.com, test@localhost.com, test3@localhost.com" 
+	    subject="This is the subject">
+	    This is the body!!
+	</Email>
+	
+	<Sms 
+		from="+555789211" 
+		to="+555789211" 
+		statusCallback="transcribe.jsp">
+        This is the body!!
+	</Sms>
+</Response>

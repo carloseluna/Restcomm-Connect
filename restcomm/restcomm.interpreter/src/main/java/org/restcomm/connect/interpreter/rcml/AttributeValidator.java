@@ -10,31 +10,66 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 public interface AttributeValidator {
-		
-	public boolean Validators (Tag tag);
+
+	public boolean RecordValidator (Tag tag);
+	public boolean DialValidator (Tag tag);
+	public boolean EmailValidator (Tag tag);
+	public boolean PauseValidator (Tag tag);
+	public boolean SmsAndFaxValidator (Tag tag);
+	public boolean GatherValidator (Tag tag);
+	public boolean PlayAndSayValidator (Tag tag);
+	
+	
 }
 
- class RecordValidator implements AttributeValidator{
+ class Validator implements AttributeValidator{
 	   Map <String, String> MyValidators = new TreeMap<String, String>();  
 	   private static Logger logger = Logger.getLogger(Parser.class);
 	   
-	  public RecordValidator() {
+	  public Validator() {
+		  /* common */
+		  MyValidators.put("urlParse", "^(((http://|https://|/))?(([\\w!~*'().&=+$%-]+: )?[\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\.){3}[0-9]{1,3}|([\\w!~*'()-]+\\.)*([\\w^-][\\w-]{0,61})?[\\w]\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\w!~*'().;?:@&=+$,%#-]+)+/*))|$");
+		  MyValidators.put("timeout","5");
+		  MyValidators.put("timeoutParse","^([0-9]{1,2})$");
+		  
+		/* for record*/
 		  MyValidators.put("maxLength","100");
 		  MyValidators.put("maxLengthParse","^([0-9]{1,3})$");
-		  MyValidators.put("timeout","5");
-		  MyValidators.put("timeoutParse","^([0-9]{1,3})$");
 		  MyValidators.put("action","action");
 		  MyValidators.put("transcribeCallback","transcribeCallback");
-		  MyValidators.put("urlParse", "^(((http://|https://|/))?(([\\w!~*'().&=+$%-]+: )?[\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\.){3}[0-9]{1,3}|([\\w!~*'()-]+\\.)*([\\w^-][\\w-]{0,61})?[\\w]\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\w!~*'().;?:@&=+$,%#-]+)+/*))|$");
-		 
+		  
 		  MyValidators.put("FinishOnKey","FinishOnKey"); 
 		  MyValidators.put("FinishOnKeyParse","^\\+|([0-9]{1})|\\#|-1$");
+		  
+		  /* for dial*/
+		  MyValidators.put("timeLimit","14400");
+		  MyValidators.put("timeLimitParse","^([0-9]{1,5})$");
+		  MyValidators.put("action","action"); 
+		
+		  /* for email   */
+		  MyValidators.put("EmailParse","^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"+"[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
+
+		  /* for PauseValidator */
+		  MyValidators.put("length","3600");
+		  MyValidators.put("lengthParse","^([0-9]{1,4})$");
+		  /* for SmsAndFaxValidator */
+		  MyValidators.put("PhoneParse","^\\+?([0-9]{1,14})$");
+
+		  /* for GatherValidator */
+		   
+		    MyValidators.put("numDigit","3");
+		   	MyValidators.put("numDigitParse","^([0-9]{1,2})$");
+		   	MyValidators.put("GtimeOut","20");
+		
+		  /* for PlayAndSayValidator */
+		    MyValidators.put("loop","3");
+			MyValidators.put("loopParse","^([0-9]{1,3})$");
 		  
 
 		  
 	  }		  
 		    
-	public boolean Validators (Tag tag) {
+	public boolean RecordValidator (Tag tag) {
 		List<Attribute> mapKeys;
 		mapKeys=tag.attributes();
 		boolean FinalValidationState=true; 
@@ -154,25 +189,8 @@ public interface AttributeValidator {
 
 		return FinalValidationState;
 	}
-}
 
-class DialValidator implements AttributeValidator {
-	
-	 Map <String, String> MyValidators = new TreeMap<String, String>();  
-	   private static Logger logger = Logger.getLogger(Parser.class);
-	   
-	  public DialValidator() {
-		  MyValidators.put("timeLimit","14400");
-		  MyValidators.put("timeLimitParse","^([0-9]{1,5})$");
-		  MyValidators.put("timeout","5");
-		  MyValidators.put("timeoutParse","^([0-9]{1,2})$");
-		  MyValidators.put("action","action"); 
-		  MyValidators.put("urlParse", "^(((http://|https://|/))?(([\\w!~*'().&=+$%-]+: )?[\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\.){3}[0-9]{1,3}|([\\w!~*'()-]+\\.)*([\\w^-][\\w-]{0,61})?[\\w]\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\w!~*'().;?:@&=+$,%#-]+)+/*))|$");
-
-	  }		  
-	
-	
-	public boolean Validators (Tag tag) {
+	public boolean DialValidator (Tag tag) {
 		List<Attribute> mapKeys;
 		mapKeys=tag.attributes();
 		boolean FinalValidationState=true; 
@@ -258,18 +276,8 @@ class DialValidator implements AttributeValidator {
 		
 		return FinalValidationState;
 	}
-}
 
-class EmailValidator implements AttributeValidator {
-	 Map <String, String> MyValidators = new TreeMap<String, String>();  
-	   private static Logger logger = Logger.getLogger(Parser.class);
-	   
-	   public EmailValidator() {
-			  MyValidators.put("EmailParse","^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"+"[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
-
-		  }		
-	   
-	public boolean Validators (Tag tag) {
+	public boolean EmailValidator (Tag tag) {
 		List<Attribute> mapKeys;
 		mapKeys=tag.attributes();
 		boolean FinalValidationState=true;
@@ -315,19 +323,7 @@ class EmailValidator implements AttributeValidator {
 		return FinalValidationState;	
 	}
 	
-}
-
-class PauseValidator implements AttributeValidator {
-	 Map <String, String> MyValidators = new TreeMap<String, String>();  
-	   private static Logger logger = Logger.getLogger(Parser.class);
-	   
-	   public PauseValidator() {
-		      MyValidators.put("length","3600");
-			  MyValidators.put("lengthParse","^([0-9]{1,4})$");
-
-		  }	
-	   
-	public boolean Validators (Tag tag) {
+	public boolean PauseValidator  (Tag tag) {
 		List<Attribute> mapKeys;
 		mapKeys=tag.attributes();
 		boolean FinalValidationState=true;
@@ -360,37 +356,21 @@ class PauseValidator implements AttributeValidator {
 		
 		return FinalValidationState;
 	}
-}
 
-
-
-class SmsAndFaxValidator implements AttributeValidator {
-	 Map <String, String> MyValidators = new TreeMap<String, String>();  
-	   private static Logger logger = Logger.getLogger(Parser.class);
-	   
-	   public SmsAndFaxValidator() {
-		      MyValidators.put("urlparse", "^(((http://|https://|/))?(([\\w!~*'().&=+$%-]+: )?[\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\.){3}[0-9]{1,3}|([\\w!~*'()-]+\\.)*([\\w^-][\\w-]{0,61})?[\\w]\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\w!~*'().;?:@&=+$,%#-]+)+/*))|$");
-			  MyValidators.put("PhoneParse","^\\+?([0-9]{1,14})$");
-
-		  }		
-	   
 	
-	public boolean Validators (Tag tag) {
+	public boolean SmsAndFaxValidator (Tag tag) {
 		List<Attribute> mapKeys;
 		mapKeys=tag.attributes();
 		boolean FinalValidationState=true;
 		
-		
-
 		for (Attribute e : mapKeys) {
 			String eName=e.name();
-			 String eValue=e.value();
+			String eValue=e.value();
 			 
 			 
 			 switch (e.name()) {
 			 case "statusCallback":
-				 Pattern patternUrl = Pattern.compile(MyValidators.get("urlparse"));
-			    	//this admit: http https and / (local directory)	
+				 Pattern patternUrl = Pattern.compile(MyValidators.get("urlParse"));
 				 Matcher matherUrl = patternUrl.matcher(eValue);
 					 /// note the attributes to and from was not validated because can admit numbers or characters
 				 if (matherUrl.matches() == false) {
@@ -402,7 +382,7 @@ class SmsAndFaxValidator implements AttributeValidator {
 				
 				 break;
 			 case "action":
-				 Pattern patternUrlAction = Pattern.compile(MyValidators.get("urlparse"));
+				 Pattern patternUrlAction = Pattern.compile(MyValidators.get("urlParse"));
 				 Matcher matherUrlAction = patternUrlAction.matcher(eValue);
 				 
 				 if (matherUrlAction.matches() == false) {
@@ -442,27 +422,9 @@ class SmsAndFaxValidator implements AttributeValidator {
 		}
 		return FinalValidationState;
 	}
-}
-
-class GatherValidator implements AttributeValidator {
-	
-	 Map <String, String> MyValidators = new TreeMap<String, String>();  
-	   private static Logger logger = Logger.getLogger(Parser.class);
-	   
-	   public GatherValidator() {
-		   
-		    MyValidators.put("numDigit","3");
-		   	MyValidators.put("numDigitParse","^([0-9]{1,2})$");
-		   	MyValidators.put("timeOut","20");
-		   	MyValidators.put("timeOutParse","^([0-9]{1,2})$");
-		    MyValidators.put("urlparse", "^(((http://|https://|/))?(([\\w!~*'().&=+$%-]+: )?[\\w!~*'().&=+$%-]+@)?(([0-9]{1,3}\\.){3}[0-9]{1,3}|([\\w!~*'()-]+\\.)*([\\w^-][\\w-]{0,61})?[\\w]\\.[a-z]{2,6})(:[0-9]{1,4})?((/*)|(/+[\\w!~*'().;?:@&=+$,%#-]+)+/*))|$");
-			 
-
-		  }		
-	   
 
 	
-	public boolean Validators (Tag tag) {
+	public boolean GatherValidator (Tag tag) {
 		List<Attribute> mapKeys;
 		mapKeys=tag.attributes();
 		boolean FinalValidationState=true;
@@ -497,11 +459,11 @@ class GatherValidator implements AttributeValidator {
 			 case "timeout":
 				 double timeout=Double.parseDouble(e.value());
 	 				
-				 Pattern patternTimeout = Pattern.compile(MyValidators.get("numDigitParse"));
+				 Pattern patternTimeout = Pattern.compile(MyValidators.get("timeoutParse"));
 				 Matcher matherTimeout = patternTimeout.matcher(e.value());
 				 
 				 if (matherTimeout.matches() == true)  {
-					 if ( (timeout<0) ||(timeout>Double.parseDouble(MyValidators.get("timeOut")) )) {
+					 if ( (timeout<0) ||(timeout>Double.parseDouble(MyValidators.get("GtimeOut")) )) {
 						 
 						 FinalValidationState=false;
 						 if(logger.isInfoEnabled()){
@@ -544,20 +506,8 @@ class GatherValidator implements AttributeValidator {
 		
 		return FinalValidationState;
 	}
-}
 
-class PlayAndSayValidator implements AttributeValidator {
-	 Map <String, String> MyValidators = new TreeMap<String, String>();  
-	   private static Logger logger = Logger.getLogger(Parser.class);
-	   
-	   public PlayAndSayValidator() {
-		      MyValidators.put("loop","3");
-			  MyValidators.put("loopParse","^([0-9]{1,3})$");
-
-		  }		
-	   
-	
-	public boolean Validators (Tag tag) {
+	public boolean PlayAndSayValidator (Tag tag) {
 		List<Attribute> mapKeys;
 		mapKeys=tag.attributes();
 		boolean FinalValidationState=true;

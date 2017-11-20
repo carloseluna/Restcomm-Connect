@@ -165,43 +165,35 @@ public final class Parser extends RestcommUntypedActor {
 	///////////////////////////////////////////// new class -- validate
     private boolean validation(Tag tag) {
     	boolean ValidationPass=true;
+    	AttributeValidator AttValidator=new Validator();
     	
     	switch (tag.name()) {
     	case "Record":
-    		AttributeValidator RecordAttValidator=new RecordValidator();
-        	ValidationPass=RecordAttValidator.Validators(tag);
+        	ValidationPass=AttValidator.RecordValidator(tag);
     		break;
     	case "Dial":
-    		AttributeValidator DialAttValidator=new DialValidator();
-        	ValidationPass=DialAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.DialValidator(tag);
     		break;
     	case "Email":
-    		AttributeValidator EmailAttValidator=new EmailValidator();
-        	ValidationPass=EmailAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.EmailValidator(tag);
     		break;
     	case "Pause":
-    		AttributeValidator PauseAttValidator=new PauseValidator();
-        	ValidationPass=PauseAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.PauseValidator(tag);
     		break;
     	case "Sms":
-    		AttributeValidator SmsAttValidator=new SmsAndFaxValidator();
-        	ValidationPass=SmsAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.SmsAndFaxValidator(tag);
     		break;
     	case "Fax":
-    		AttributeValidator FaxAttValidator=new SmsAndFaxValidator();
-        	ValidationPass=FaxAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.SmsAndFaxValidator(tag);
     		break;
     	case "Gather":
-    		AttributeValidator GatherAttValidator=new GatherValidator();
-        	ValidationPass=GatherAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.GatherValidator(tag);
     		break;
     	case "Play":
-    		AttributeValidator PlayAttValidator=new PlayAndSayValidator();
-        	ValidationPass=PlayAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.PlayAndSayValidator(tag);
     		break;
     	case "Say":
-    		AttributeValidator SayAttValidator=new PlayAndSayValidator();
-        	ValidationPass=SayAttValidator.Validators(tag);
+    		ValidationPass=AttValidator.PlayAndSayValidator(tag);
     		break;
     		
     	}
